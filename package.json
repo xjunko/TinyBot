@@ -1,6 +1,9 @@
 {
   "name": "tinybot",
   "version": "4.1.0",
+  "engines": {
+    "node": "14.x"
+  },
   "description": "",
   "main": "botv4.js",
   "scripts": {
@@ -23,7 +26,6 @@
     "node-osu": "github:tienei/node-osu",
     "ojsama": "^1.2.5",
     "rx-akatsuki-pp": "^1.0.1",
-    "sharp": "^0.23.4",
     "superagent": "^5.2.2",
     "text2png": "^2.3.0"
   }
