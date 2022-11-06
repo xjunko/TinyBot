@@ -1,8 +1,11 @@
 const { Message, MessageEmbed } = require("discord.js")
-const fx = require('./../Functions/load_fx')
+const fx = require('./../Functions/fx_handler')
 const request = require('superagent')
 
-async function trivia(message = new Message()){
+/** 
+* @param {{message: Message}} 
+*/
+async function trivia({message}){
     function shuffle(arr) {
         arr.sort(() => Math.random() - 0.5);
         return arr;
@@ -40,7 +43,6 @@ async function trivia(message = new Message()){
         }
         shuffled_answers = shuffle(answers)
     } else if (question_type == 'boolean') {
-        console.log(decodeURIComponent(question.results[0].correct_answer))
         if (decodeURIComponent(question.results[0].correct_answer) == 'True') {
             shuffled_answers[0] = decodeURIComponent(question.results[0].correct_answer)
             shuffled_answers[1] = decodeURIComponent(question.results[0].incorrect_answers[0])
@@ -48,7 +50,6 @@ async function trivia(message = new Message()){
             shuffled_answers[1] = decodeURIComponent(question.results[0].correct_answer)
             shuffled_answers[0] = decodeURIComponent(question.results[0].incorrect_answers[0])
         }
-        console.log(shuffled_answers)
     }
     let diff = question.results[0].difficulty
     diff = diff.charAt(0).toUpperCase() + diff.slice(1)
@@ -119,42 +120,51 @@ async function trivia(message = new Message()){
     }
 }
 
-async function tenor(message = new Message(), start, search, action, aloneaction) {
+/** 
+ * @param {{message: Message}} 
+ */
+async function tenor({message, search, action, alone_action}) {
     try {
         let msg = message.content.toLowerCase();
         let embedcolor = (message.guild == null ? "#7f7fff": message.guild.me.displayColor)
         let text = ''
-        let user_to_find = msg.substring(start)
-        let user = fx.general.find_discord_user(message, user_to_find)
-        if ((user == null || user.id == message.author.id) || (action == undefined)) {
-            text = aloneaction
+        let suffix = fx.general.check_suffix({check_msg: msg, two_arg: false, suffix: [{"suffix": undefined, "v_count": 0}]})
+        let user = suffix.check.replace(/[<@>]/gm, '')
+        if ((user == '' || user == message.author.id) || (action == undefined)) {
+            text = alone_action
         } else {
-            text = `<@${user.id}>, ${action} <@${message.author.id}>`
+            text = `<@${user}>, ${action} <@${message.author.id}>`
         }
-        let gif = (await request.get(`https://api.tenor.com/v1/search?q=${search}&key=${process.env.TENOR_KEY}&limit=25&media_filter=minimal&contentfilter=medium`)).body
+        let gif = await (await request.get(`https://api.tenor.com/v1/search?q=${search}&key=${process.env.TENOR_KEY}&limit=25&media_filter=minimal&contentfilter=medium`)).body
         const embed = new MessageEmbed()
         .setColor(embedcolor)
         .setDescription(text)
-        .setImage(gif.results[Math.floor(Math.random()*24)].media[0].gif.url);
+        .setImage(gif.results[Math.floor(Math.random()*25-0.01)].media[0].gif.url);
         message.channel.send({embed})
     } catch (error) {
        message.channel.send(String(error))
     }
 }
 
-function roll(message = new Message()) {
+/** 
+ * @param {{message: Message}} 
+ */
+function roll({message}) {
     try {
         let msg = message.content.toLowerCase()
         let number = msg.split(' ')[1]
-        if (isNaN(number) || number < 1) number = 100;
-        let rolled = Math.floor(Math.random() * number)
+        if (isNaN(number) || number < 1) number = 101;
+        let rolled = Math.floor(Math.random() * number - 0.01)
         message.channel.send(`You roll ${rolled}!`)
     } catch (error) {
         message.channel.send(String(error))
     }
 }
 
-function eight_ball(message = new Message()) {
+/** 
+ * @param {{message: Message}} 
+ */
+function eight_ball({message}) {
     try {
         let msg = message.content.toLowerCase()
         let command = msg.split(' ')[0]
@@ -166,15 +176,17 @@ function eight_ball(message = new Message()) {
                             'As I see it, yes.', 'Most likely.', 'Outlook good.', 'Yes.', 'Signs point to yes.',
                             'Reply hazy, try again.', 'Ask again later.', 'Better not tell you now.', 'Cannot predict now.', 'Concentrate and ask again.',
                             "Don't count on it.", 'My reply is no.', 'My sources say no.', 'Outlook not so good.', 'Very doubtful.']
-        let random = Math.floor(Math.random() * 19)
-        if (random > 20) random = 19
+        let random = Math.floor(Math.random() * random_respond.length - 0.01)
         message.channel.send(random_respond[random])
     } catch (error) {
         message.channel.send(String(error))
     }
 }
 
-function rate_waifu(message = new Message()) {
+/** 
+ * @param {{message: Message}} 
+ */
+function rate_waifu({message}) {
     try {
         let msg = message.content.toLowerCase()
         let command = msg.split(' ')[0]
@@ -182,12 +194,10 @@ function rate_waifu(message = new Message()) {
         if (waifu == '') {
             throw 'Type your waifu name please'
         }
-        let score = Math.floor(Math.random() * 101)
-        if (score >= 101) score = 100;
+        let score = Math.floor(Math.random() * 101 - 0.01)
         let random_respond = [`Hmm... i rate ${waifu} a ${score}/100`, `This is tough... ${score}/100`, `Maybe ${waifu} is a ${score}/100`,
                             `I would rate ${waifu} a ${score}/100`, `I rate ${waifu} a solid ${score}/100`]
-        let random = Math.floor(Math.random() * 5)
-        if (random > 6) random = 5
+        let random = Math.floor(Math.random() * random_respond.length - 0.01)
         if (score == 0) message.channel.send(`Your ${waifu} is too ugly! ${score}/100`);
         else if (score == 100) message.channel.send(`Woah! A pefect match! ${score}/100`);
         else message.channel.send(random_respond[random])
